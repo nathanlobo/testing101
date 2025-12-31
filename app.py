@@ -1,5 +1,5 @@
 """
-McLaren CreditMemo Agent v1.0
+The Matrix Prime
 A Streamlit application for automated credit memo generation from financial PDFs
 Hackathon: Orix McLaren 2026
 """
@@ -23,13 +23,13 @@ MEMO_DIR = DATA_DIR / "memos"
 
 # Page config
 st.set_page_config(
-    page_title="McLaren CreditMemo Agent v1.0",
-    page_icon="🏎️",
+    page_title="The Matrix Prime",
+    page_icon="🔴",
     layout="wide"
 )
 
 # System prompt for the AI
-SYSTEM_PROMPT = """You are the McLaren CreditMemo Agent. Your job is to convert raw PDF text into a professional Credit Memo.
+SYSTEM_PROMPT = """You are The Matrix Prime Agent. Your job is to convert raw PDF text into a professional Credit Memo.
 
 Rules:
 - EXTRACT facts accurately. Cite page numbers for every claim (e.g., [Page 4]).
@@ -321,7 +321,7 @@ def format_run_label(run):
 
 
 # Main UI
-st.title("🏎️ McLaren CreditMemo Agent v1.0")
+st.title("🔴 The Matrix Prime")
 st.caption("AI-Powered Credit Memo Generation | Powered by Groq Llama-3")
 
 # Sidebar for API key and upload
@@ -498,7 +498,7 @@ if st.session_state.memo_content:
 else:
     # Welcome screen
     st.markdown("""
-    ## Welcome to McLaren CreditMemo Agent 🏎️
+    ## Welcome to The Matrix Prime 🔴
     
     ### What this does:
     Transform dense financial PDFs into structured, audit-ready Credit Memos in **seconds**.
@@ -536,4 +536,4 @@ else:
 
 # Footer
 st.divider()
-st.caption("McLaren CreditMemo Agent v1.0 | Hackathon Edition | Powered by Groq Llama-3 🚀")
+st.caption("The Matrix Prime | Hackathon Edition | Powered by Groq Llama-3 🚀")

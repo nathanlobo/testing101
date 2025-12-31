@@ -1,13 +1,14 @@
-# AI Agent Instructions - McLaren CreditMemo Agent
+# AI Agent Instructions - The Matrix Prime
 
 ## Architecture Overview
-Single-file Streamlit app (`app.py`) built for hackathon speed. No microservices, no database—pure stateful UI with session state management. PDF → AI → Structured Output pipeline in ~400 lines.
+Single-file Streamlit app (`app.py`) built for hackathon speed. No microservices, no database—pure stateful UI with session state management. PDF → AI → Structured Output pipeline in ~500 lines.
 
 **Data Flow:**
 1. PDF upload → PyMuPDF extraction with page tracking (`extract_pdf_text_with_pages`)
-2. Formatted text → Groq API (Llama-3-8B-8192) with `SYSTEM_PROMPT`
+2. Formatted text → Groq API (Llama-3.1-8B-Instant) with `SYSTEM_PROMPT`
 3. Markdown memo → Session state → Split-screen display + chat refinement
 4. Export → python-docx or raw markdown download
+5. Persistence → Local storage (data/ folder) with load/reload capability
 
 ## Critical Developer Workflows
 

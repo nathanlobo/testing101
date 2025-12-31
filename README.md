@@ -1,4 +1,4 @@
-# 🏎️ McLaren CreditMemo Agent v1.0
+# 🔴 The Matrix Prime
 
 **AI-Powered Credit Memo Generation for Financial Due Diligence**
 
@@ -8,7 +8,7 @@ Built for the **Orix McLaren Hackathon 2026**
 
 ## 🎯 Overview
 
-McLaren CreditMemo Agent transforms dense financial PDFs (Balance Sheets, 10-Ks, Annual Reports) into structured, audit-ready Credit Memos in **under 5 seconds**. Every claim is backed by source citations for full traceability.
+The Matrix Prime transforms dense financial PDFs (Balance Sheets, 10-Ks, Annual Reports) into structured, audit-ready Credit Memos in **under 5 seconds**. Every claim is backed by source citations for full traceability.
 
 ### The Problem
 Manual credit memo creation takes hours. Analysts manually extract metrics, cross-reference pages, and format reports. Error-prone. Slow. Painful.
@@ -129,7 +129,7 @@ Plotly-powered trend charts for key financial metrics.
    ```bash
    git init
    git add .
-   git commit -m "Initial commit - McLaren CreditMemo Agent"
+   git commit -m "Initial commit - The Matrix Prime"
    git branch -M main
    git remote add origin <your-github-repo-url>
    git push -u origin main
@@ -168,7 +168,7 @@ Your app will be live at: `https://your-app-name.streamlit.app`
 > 
 > *"Extracting metrics from 50-page PDFs. Cross-referencing page numbers. Formatting tables. It's brutal. What if we could do it in 5 seconds?"*
 > 
-> *"Meet the McLaren CreditMemo Agent—built with the same philosophy as a McLaren Formula 1 car: SPEED."*
+> *"Meet The Matrix Prime—powerful, precise, and ready to scale financial analysis. SPEED."*
 
 **[OPEN THE APP ON SCREEN]**
 
@@ -225,7 +225,7 @@ Your app will be live at: `https://your-app-name.streamlit.app`
 > 
 > **[FINAL SLIDE/GESTURE]**
 > 
-> *"McLaren CreditMemo Agent. From upload to export in 30 seconds. Built for speed. Built for accuracy. Built for you."*
+> *"The Matrix Prime. From upload to export in 30 seconds. Built for speed. Built for accuracy. Built for you."*
 > 
 > *"Thank you."*
 
@@ -302,4 +302,4 @@ For questions or demo requests, reach out via GitHub Issues.
 
 ---
 
-**Built with 🏎️ speed and ❤️ precision**
+**Built with 🔴 precision and ❤️ power**
