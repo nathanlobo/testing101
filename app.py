@@ -7,6 +7,7 @@ Hackathon: Orix McLaren 2026
 import streamlit as st
 import fitz  # PyMuPDF
 import os
+from pathlib import Path
 from groq import Groq
 import plotly.graph_objects as go
 from datetime import datetime
@@ -14,6 +15,11 @@ import io
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+# Local persistence paths (keeps uploads and memos between sessions)
+DATA_DIR = Path("data")
+PDF_DIR = DATA_DIR / "pdf_uploads"
+MEMO_DIR = DATA_DIR / "memos"
 
 # Page config
 st.set_page_config(
@@ -70,6 +76,10 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'pdf_doc' not in st.session_state:
     st.session_state.pdf_doc = None
+if 'pdf_bytes' not in st.session_state:
+    st.session_state.pdf_bytes = None
+if 'last_saved' not in st.session_state:
+    st.session_state.last_saved = None
 
 
 def extract_pdf_text_with_pages(pdf_file):
@@ -88,8 +98,20 @@ def extract_pdf_text_with_pages(pdf_file):
     
     # Store PDF for viewer
     st.session_state.pdf_doc = pdf_bytes
+    st.session_state.pdf_bytes = pdf_bytes
     
     return full_text, page_texts, doc
+
+
+def extract_pdf_text_from_bytes(pdf_bytes: bytes):
+    """Extract text with page markers from raw PDF bytes"""
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    full_text = ""
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        text = page.get_text()
+        full_text += f"\n\n--- PAGE {page_num + 1} ---\n{text}"
+    return full_text, doc
 
 
 def generate_credit_memo(pdf_text, groq_api_key):
@@ -211,6 +233,93 @@ def export_to_docx(memo_content):
     return buffer
 
 
+def ensure_storage_dirs():
+    """Create local storage folders if missing"""
+    PDF_DIR.mkdir(parents=True, exist_ok=True)
+    MEMO_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def persist_run(uploaded_file, memo_content):
+    """Save uploaded PDF and generated memo to disk for persistence"""
+    ensure_storage_dirs()
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_name = Path(uploaded_file.name).name.replace(" ", "_")
+
+    pdf_path = PDF_DIR / f"{timestamp}_{safe_name}"
+    memo_path = MEMO_DIR / f"{timestamp}_{Path(safe_name).stem}.md"
+
+    if st.session_state.pdf_bytes:
+        pdf_path.write_bytes(st.session_state.pdf_bytes)
+    memo_path.write_text(memo_content or "", encoding="utf-8")
+
+    st.session_state.last_saved = {
+        "pdf": str(pdf_path),
+        "memo": str(memo_path),
+        "timestamp": timestamp,
+    }
+    return pdf_path, memo_path
+
+
+def list_saved_runs():
+    """Return list of saved runs paired by timestamp"""
+    ensure_storage_dirs()
+    def ts_key(path: Path):
+        parts = path.name.split("_")
+        if len(parts) >= 2:
+            return f"{parts[0]}_{parts[1]}"
+        return parts[0]
+
+    pdfs = {ts_key(p): p for p in PDF_DIR.glob("*.pdf")}
+    memos = {ts_key(m): m for m in MEMO_DIR.glob("*.md")}
+    runs = []
+    for ts, memo_path in memos.items():
+        pdf_path = pdfs.get(ts)
+        if pdf_path:
+            runs.append({
+                "timestamp": ts,
+                "memo": memo_path,
+                "pdf": pdf_path
+            })
+    runs.sort(key=lambda r: r["timestamp"], reverse=True)
+    return runs
+
+
+def load_saved_run(run):
+    """Load memo and PDF into session state"""
+    pdf_bytes = run["pdf"].read_bytes()
+    pdf_text, doc = extract_pdf_text_from_bytes(pdf_bytes)
+    memo_text = run["memo"].read_text(encoding="utf-8")
+
+    st.session_state.memo_content = memo_text
+    st.session_state.pdf_text = pdf_text
+    st.session_state.pdf_doc = pdf_bytes
+    st.session_state.pdf_bytes = pdf_bytes
+    st.session_state.chat_history = []
+    st.session_state.last_saved = {
+        "pdf": str(run["pdf"]),
+        "memo": str(run["memo"]),
+        "timestamp": run["timestamp"],
+    }
+
+
+def format_run_label(run):
+    """Return a human-friendly label for a saved run"""
+    ts_raw = run.get("timestamp", "")
+    ts_human = ts_raw
+    try:
+        ts_human = datetime.strptime(ts_raw, "%Y%m%d_%H%M%S").strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        pass
+    pdf_name = run.get("pdf").name if run.get("pdf") else "uploaded.pdf"
+    parts = pdf_name.split("_", 2)
+    clean_name = pdf_name
+    if len(parts) >= 3:
+        clean_name = parts[2]
+    elif len(parts) == 2:
+        clean_name = parts[1]
+    return f"{ts_human} | {clean_name}"
+
+
 # Main UI
 st.title("🏎️ McLaren CreditMemo Agent v1.0")
 st.caption("AI-Powered Credit Memo Generation | Powered by Groq Llama-3")
@@ -228,6 +337,22 @@ with st.sidebar:
     )
     
     st.divider()
+
+    # Load previous runs
+    st.header("📂 Load Saved Run")
+    saved_runs = list_saved_runs()
+    if saved_runs:
+        options = {format_run_label(r): r for r in saved_runs}
+        selected_label = st.selectbox(
+            "Select a saved memo",
+            options=list(options.keys())
+        )
+        if st.button("🔄 Load Selected", use_container_width=True):
+            load_saved_run(options[selected_label])
+            st.success("Loaded saved memo and PDF")
+            st.rerun()
+    else:
+        st.caption("No saved runs yet. Generate a memo to create one.")
     
     # File uploader
     st.header("📄 Upload Document")
@@ -247,8 +372,11 @@ with st.sidebar:
                 memo = generate_credit_memo(pdf_text, groq_api_key)
                 st.session_state.memo_content = memo
                 st.session_state.chat_history = []
+                # Persist PDF + memo locally for durability
+                pdf_path, memo_path = persist_run(uploaded_file, memo)
             
-            st.success("✅ Memo generated successfully!")
+            st.success("✅ Memo generated and saved locally!")
+            st.caption(f"Saved: PDF → {pdf_path.name} | Memo → {memo_path.name} (data/)")
             st.rerun()
     
     st.divider()
@@ -258,6 +386,9 @@ with st.sidebar:
     if st.session_state.pdf_text:
         st.metric("PDF Pages", st.session_state.pdf_text.count("--- PAGE"))
         st.metric("Total Characters", len(st.session_state.pdf_text))
+    if st.session_state.last_saved:
+        st.text(f"Last saved memo: {Path(st.session_state.last_saved['memo']).name}")
+        st.text(f"Last saved PDF: {Path(st.session_state.last_saved['pdf']).name}")
     
     st.divider()
     

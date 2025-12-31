@@ -44,6 +44,8 @@ Thumbs.db
 
 # Uploaded files (optional - uncomment if you don't want to track test PDFs)
 # *.pdf
+# Local persistence outputs
+data/
 
 # Temporary files
 *.tmp
